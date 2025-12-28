@@ -1,2 +1,5 @@
-# intel4004-emulator
-W.I.P
+# Supported instuction
+NOP, JUN, DEC, ADD, SUB, LD, XCH, LDM, CLC, STC.
+
+# How to run?
+Soon
