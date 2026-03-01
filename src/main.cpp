@@ -1,37 +1,69 @@
 #include "cpu.h"
 #include "mnemonics.h"
 #include <cstdint>
+#include <fmt/base.h>
+#include <fstream>
 #include <iostream>
-#include <ostream>
+#include <string>
+
+std::array<uint8_t, 4096> readBinary(const std::string& path) {
+    std::ifstream file(path, std::ios::binary);
+
+    if (!file)
+        return {};
+
+    std::array<uint8_t, 4096> buffer{};
+
+    file.read(reinterpret_cast<char*>(buffer.data()), buffer.size());
+
+    return buffer;
+}
 
 // INFO: https://datasheets.chipdb.org/Intel/MCS-4/datashts/intel-4004.pdf
-int main() {
-  CPU4004 cpu;
+int main(int32_t argc, char* argv[]) {
+    CPU4004 cpu;
 
-  // NOP -> 0x00
-  // *JUN -> 0x4_
-  // DEC -> 0x6_
-  // ADD -> 0x8_
-  // SUB -> 0x9_
-  // LD -> 0xA_
-  // XCH -> 0xB_
-  // LDM -> 0xD_
-  // CLC -> 0xF1
-  // STC -> 0xFA
-  cpu.ROM = {0xFA, 0xF1, 0xFA};
+    // i4004emu file.bin [-debug]
 
-  cpu.PC = 0;
+    std::string input;
+    bool debug = false;
 
-  for (int i = 0; i < cpu.ROM.size(); i++) {
-    uint8_t opcode = cpu.fetch();
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
 
-    if (mapOfMnemonics.find(opcode >> 4) == mapOfMnemonics.end()) {
-      std::cout << "Mnemonic not found." << std::endl;
-      break;
+        if (arg == "-debug") {
+            debug = true;
+        }
+
+        if (input.empty()) {
+            input = arg;
+        }
     }
 
-    mapOfMnemonics[opcode >> 4](&cpu, opcode);
-    std::cout << "AC: " << static_cast<int>(cpu.AC) << std::endl;
-    std::cout << "Carry: " << cpu.Carry << std::endl;
-  }
+    if (input.empty()) {
+        fmt::println(stderr, "usage: i4004emu main.bin [-debug]");
+        return 1;
+    }
+
+    cpu.ROM = readBinary(input);
+
+    while (cpu.PC < cpu.ROM.size()) {
+        uint8_t opcode = cpu.fetch();
+
+        fmt::print("{:x} ", opcode);
+
+        if (mapOfMnemonics.find(opcode >> 4) == mapOfMnemonics.end()) {
+            continue;
+        }
+
+        mapOfMnemonics[opcode >> 4](&cpu, opcode);
+    }
+
+    if (debug) {
+        fmt::println("AC: {}", cpu.AC);
+        fmt::println("Carry: {}", cpu.Carry);
+        for (uint8_t i = 0; i < cpu.R.size(); i++) {
+            fmt::println("R{}: {}", i, cpu.R[i]);
+        }
+    }
 };

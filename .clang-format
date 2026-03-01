@@ -1,0 +1,10 @@
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+BreakBeforeBraces: Attach
+PointerAlignment: Left
+AllowShortFunctionsOnASingleLine: Empty
+SpaceAfterTemplateKeyword: true
+SortIncludes: true
+ReflowComments: true
