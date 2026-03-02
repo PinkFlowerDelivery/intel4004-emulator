@@ -50,8 +50,6 @@ int main(int32_t argc, char* argv[]) {
     while (cpu.PC < cpu.ROM.size()) {
         uint8_t opcode = cpu.fetch();
 
-        fmt::print("{:x} ", opcode);
-
         if (mapOfMnemonics.find(opcode >> 4) == mapOfMnemonics.end()) {
             continue;
         }
